@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Stack Tower — Free Online Block Stacking Game</title>
+<meta name="description" content="Stack Tower is a free online stacking game. Click or tap to drop each moving block; the overhang is sliced off and your tower grows. No download, play free.">
+<meta name="theme-color" content="#0b0d1a">
+<style>
+:root{
+  --bg:#0b0d1a; --panel:#151935; --panel2:#1d2247; --line:#2a3060;
+  --txt:#e8ecff; --dim:#9aa3cc; --acc:#6ee7ff; --acc2:#a78bfa; --good:#34d399; --bad:#fb7185;
+  --r:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(1200px 600px at 50% -10%, #1b2050 0%, var(--bg) 60%) no-repeat var(--bg);
+  color:var(--txt); min-height:100vh;
+  font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-text-size-adjust:100%;
+}
+a{color:var(--acc);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:900px;margin:0 auto;padding:0 14px}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(11,13,26,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;gap:14px;height:56px}
+.brand{font-weight:800;letter-spacing:.3px;font-size:19px}
+.brand span{color:var(--acc)}
+.topbar nav{margin-left:auto;display:flex;gap:16px;font-size:14px}
+.topbar nav a{color:var(--dim)}
+.topbar nav a:hover{color:var(--txt);text-decoration:none}
+
+h1{font-size:26px;margin:22px 0 6px;letter-spacing:.2px}
+.sub{color:var(--dim);margin:0 0 20px;font-size:15px}
+
+/* game grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:26px}
+.card{
+  display:block;background:linear-gradient(160deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);border-radius:var(--r);padding:16px;color:var(--txt);
+  transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;
+}
+.card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 10px 30px rgba(110,231,255,.12);text-decoration:none}
+.card .ico{font-size:30px;line-height:1;margin-bottom:10px}
+.card h3{margin:0 0 4px;font-size:17px}
+.card p{margin:0;font-size:13px;color:var(--dim)}
+.card .tag{display:inline-block;margin-top:10px;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--acc2);border:1px solid var(--acc2);border-radius:99px;padding:2px 9px}
+
+/* game view */
+.gamehead{display:flex;align-items:center;gap:12px;margin:16px 0 12px;flex-wrap:wrap}
+.btn{
+  background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+  border-radius:10px;padding:8px 14px;font-size:14px;cursor:pointer;font-family:inherit;
+}
+.btn:hover{border-color:var(--acc);color:var(--acc)}
+.btn.primary{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#0b0d1a;border:0;font-weight:700}
+.gamehead h2{margin:0;font-size:20px}
+.best{margin-left:auto;font-size:13px;color:var(--dim)}
+.best b{color:var(--good)}
+
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;align-items:center;gap:12px}
+canvas{background:#0a0c18;border-radius:10px;max-width:100%;touch-action:none;display:block}
+.hud{display:flex;gap:18px;font-size:14px;color:var(--dim);flex-wrap:wrap;justify-content:center}
+.hud b{color:var(--txt);font-size:18px;display:block;text-align:center}
+.hint{color:var(--dim);font-size:13px;text-align:center;min-height:20px}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+
+/* goal bar (match-3) */
+.goalbar{width:min(92vw,420px);height:10px;border-radius:99px;background:#22284d;border:1px solid var(--line);overflow:hidden;margin:6px auto 2px}
+.goalfill{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2),#fb7185);transition:width .25s ease}
+
+/* 2048 board */
+.b2048{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;background:#0a0c18;padding:8px;border-radius:10px;width:min(92vw,360px);aspect-ratio:1}
+.b2048 div{display:flex;align-items:center;justify-content:center;font-weight:800;font-size:26px;border-radius:8px;background:#171a33;color:#e8ecff}
+.t2{background:#1e223f!important;color:#c7cbe8!important}
+.t4{background:#2a2f57!important}
+.t8{background:#3b3f8f!important}
+.t16{background:#4c3fa0!important}
+.t32{background:#6d3ba8!important}
+.t64{background:#9333c4!important}
+.t128{background:#a12fa0!important;font-size:22px!important}
+.t256{background:#c22b7a!important;font-size:22px!important}
+.t512{background:#e0474c!important;font-size:22px!important}
+.t1024{background:#f59e0b!important;font-size:18px!important;color:#23180a!important}
+.t2048{background:#22d3ee!important;font-size:18px!important;color:#062a30!important}
+
+/* reflex */
+.reflex{width:min(92vw,420px);aspect-ratio:1/1;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:700;text-align:center;cursor:pointer;user-select:none;border:1px solid var(--line);padding:20px}
+.reflex.wait{background:#1b2a4a}
+.reflex.go{background:linear-gradient(135deg,var(--good),#0ea5e9);color:#04231a}
+.reflex.done{background:var(--panel2)}
+
+/* ads */
+.adslot{margin:14px auto;display:flex;justify-content:center;align-items:center;min-height:0;overflow:hidden}
+.adslot:empty{display:none}
+.adslot iframe,.adslot ins,.adslot img{max-width:100%}
+.adlabel{font-size:10px;color:#5b6390;text-align:center;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px}
+
+.overlay{position:fixed;inset:0;background:rgba(6,8,18,.86);z-index:100;display:flex;align-items:center;justify-content:center;padding:18px}
+.overlay .box{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;max-width:520px;width:100%;text-align:center}
+.hidden{display:none!important}
+
+footer{border-top:1px solid var(--line);margin-top:34px;padding:18px 0 30px;color:var(--dim);font-size:13px}
+footer a{color:var(--dim)}
+@media (max-width:520px){
+  h1{font-size:22px}
+  .topbar nav{gap:12px;font-size:13px}
+}
+
+</style>
+<link rel="manifest" href="https://foxxx009.github.io/mini-arcade/manifest.webmanifest">
+</head>
+<body>
+<div class="topbar"><div class="wrap">
+  <div class="brand">Mini<span>Arcade</span></div>
+  <nav><a href="https://foxxx009.github.io/mini-arcade/">Games</a><a href="https://foxxx009.github.io/mini-arcade/about/">About</a><a href="https://foxxx009.github.io/mini-arcade/privacy/">Privacy</a></nav>
+</div></div>
+
+<div class="wrap">
+  <div id="ad-top" class="adslot"></div>
+  <div class="gamehead">
+    <a class="btn" href="https://foxxx009.github.io/mini-arcade/">← All games</a>
+    <h2>Stack Tower</h2>
+  </div>
+  <div class="stage" id="stage"></div>
+  <div id="ad-game" class="adslot"></div>
+
+  <h2 style="font-size:18px;margin-top:28px">How to play Stack Tower</h2>
+  <p class="sub">A block slides back and forth above your tower. Click, tap or press <b>space</b> to drop it.
+  Whatever hangs over the edge is sliced off and falls away, so the next block is narrower and the game gets harder.
+  Miss completely and the tower ends.</p>
+  <p class="sub"><b>Tip:</b> drop on the frame the block is exactly over the one below — a perfect drop earns a small width bonus,
+  and consecutive perfect drops stack into a combo.</p>
+</div>
+
+<footer><div class="wrap">
+  <div>Mini Arcade · free browser games · <a href="https://foxxx009.github.io/mini-arcade/privacy/">Privacy Policy</a></div>
+</div></footer>
+
+<script>
+/* Mini Arcade — shared runtime: ads, best-score storage, UI helpers */
+(function () {
+  'use strict';
+  var MA = (window.MiniArcade = window.MiniArcade || {});
+
+  /* ---------- config ----------
+     Fill AD_CONFIG slots with the ad-network snippet each network gives you.
+     Leave a slot as "" and nothing is rendered (no empty boxes, no layout shift).
+     Networks that pay out in crypto (USDT/BTC) and accept free hosting:
+       Adsterra  -> https://adsterra.com   (Bitcoin / USDT, min $5)
+       Monetag   -> https://monetag.com    (USDT TRC20, min $5)
+     Paste their snippet raw, it may be <script src="..."> or plain html.
+  --------------------------------------------------------------- */
+  var AD_CONFIG = (window.AD_CONFIG = window.AD_CONFIG || {
+    enabled: false,
+    slots: {
+      'ad-top': '',
+      'ad-home': '',
+      'ad-game': '',
+      'ad-interstitial': ''
+    },
+    interstitialEvery: 3 // show interstitial after every N finished rounds
+  });
+
+  function injectHTML(el, html) {
+    if (!el || !html) return;
+    el.innerHTML = html;
+    // re-create <script> nodes: innerHTML-inserted scripts do not execute
+    var scripts = el.querySelectorAll('script');
+    Array.prototype.forEach.call(scripts, function (old) {
+      var s = document.createElement('script');
+      Array.prototype.forEach.call(old.attributes, function (a) { s.setAttribute(a.name, a.value); });
+      s.text = old.text;
+      old.parentNode.replaceChild(s, old);
+    });
+  }
+
+  MA.renderAds = function () {
+    if (!AD_CONFIG.enabled) return;
+    Object.keys(AD_CONFIG.slots || {}).forEach(function (id) {
+      if (id === 'ad-interstitial') return; // injected on demand
+      injectHTML(document.getElementById(id), AD_CONFIG.slots[id]);
+    });
+  };
+
+  /** Call at the end of a round. Shows an interstitial every N rounds. */
+  MA.onRoundEnd = function () {
+    if (!AD_CONFIG.enabled) return;
+    try {
+      var n = (parseInt(localStorage.getItem('ma_rounds') || '0', 10) || 0) + 1;
+      localStorage.setItem('ma_rounds', String(n));
+      var every = AD_CONFIG.interstitialEvery || 3;
+      if (n % every !== 0) return;
+      var html = AD_CONFIG.slots['ad-interstitial'];
+      if (!html) return;
+      var ov = document.createElement('div');
+      ov.className = 'overlay';
+      ov.innerHTML =
+        '<div class="box"><div class="adlabel">Advertisement</div><div class="adbody"></div>' +
+        '<div style="margin-top:14px"><button class="btn primary" id="maClose">' +
+        'Continue playing</button></div></div>';
+      document.body.appendChild(ov);
+      injectHTML(ov.querySelector('.adbody'), html);
+      ov.querySelector('#maClose').addEventListener('click', function () {
+        ov.remove();
+      });
+    } catch (e) { /* storage blocked: skip */ }
+  };
+
+  /* ---------- best score ---------- */
+  MA.best = function (key) {
+    try { return parseInt(localStorage.getItem('ma_best_' + key) || '0', 10) || 0; } catch (e) { return 0; }
+  };
+  MA.setBest = function (key, val) {
+    try {
+      var cur = MA.best(key);
+      var better = MA.higherIsBetter(key) ? val > cur : (cur === 0 || val < cur);
+      if (better) { localStorage.setItem('ma_best_' + key, String(val)); return true; }
+    } catch (e) { }
+    return false;
+  };
+  var LOWER_IS_BETTER = { reflex: true }; // reaction time in ms
+  MA.higherIsBetter = function (key) { return !LOWER_IS_BETTER[key]; };
+
+  /* ---------- ui helpers ---------- */
+  MA.el = function (tag, cls, txt) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt != null) e.textContent = txt;
+    return e;
+  };
+  MA.hud = function (pairs) {
+    var d = MA.el('div', 'hud');
+    pairs.forEach(function (p) {
+      var s = MA.el('span');
+      s.appendChild(document.createTextNode(p[0] + ' '));
+      var b = MA.el('b', null, String(p[1]));
+      s.appendChild(b);
+      d.appendChild(s);
+    });
+    return d;
+  };
+  MA.button = function (label, onClick, primary) {
+    var b = MA.el('button', 'btn' + (primary ? ' primary' : ''), label);
+    b.addEventListener('click', onClick);
+    return b;
+  };
+
+  /* ---------- canvas helpers ---------- */
+  MA.fitCanvas = function (cv, w, h) {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = w * dpr;
+    cv.height = h * dpr;
+    cv.style.width = w + 'px';
+    cv.style.height = h + 'px';
+    var ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return ctx;
+  };
+
+  document.addEventListener('DOMContentLoaded', function () { MA.renderAds(); });
+})();
+
+</script>
+<script>
+/* Stack Tower — drop moving blocks, keep only the overlapping part */
+(function (MA) {
+  'use strict';
+  var W = 340, H = 540, BH = 24, START_W = 170;
+
+  MA.startStack = function (host) {
+    host.innerHTML = '';
+    var cv = document.createElement('canvas');
+    var ctx = MA.fitCanvas(cv, W, H);
+    host.appendChild(cv);
+
+    var hud = MA.hud([['Score', 0], ['Best', MA.best('stack')]]);
+    host.appendChild(hud);
+    var hint = MA.el('div', 'hint', 'Click / tap / press SPACE to drop the block');
+    host.appendChild(hint);
+    var row = MA.el('div', 'row');
+    host.appendChild(row);
+
+    var blocks = [], falling = [], score = 0, scroll = 0, over = false, flash = 0, combo = 0;
+    var mov;
+
+    function hue(i) { return (i * 26 + 190) % 360; }
+
+    function reset() {
+      blocks = []; falling = []; score = 0; scroll = 0; over = false; combo = 0; flash = 0;
+      row.innerHTML = '';
+      blocks.push({ x: (W - START_W) / 2, w: START_W });
+      newBlock();
+      setHud();
+    }
+
+    function newBlock() {
+      var top = blocks[blocks.length - 1];
+      var w = top.w;
+      var speed = Math.min(1.5 + score * 0.09, 6.2);
+      mov = { x: 0, w: w, dir: 1, speed: speed, y: blocks.length };
+      if (Math.random() < 0.5) { mov.x = -w; mov.dir = 1; } else { mov.x = W; mov.dir = -1; }
+    }
+
+    function setHud() {
+      hud.innerHTML = '';
+      var s = MA.el('span');
+      s.appendChild(document.createTextNode('Score '));
+      s.appendChild(MA.el('b', null, String(score)));
+      hud.appendChild(s);
+      var b2 = MA.el('span');
+      b2.appendChild(document.createTextNode('Best '));
+      b2.appendChild(MA.el('b', null, String(MA.best('stack'))));
+      hud.appendChild(b2);
+    }
+
+    function drop() {
+      if (over) return;
+      var top = blocks[blocks.length - 1];
+      var l = Math.max(mov.x, top.x);
+      var r = Math.min(mov.x + mov.w, top.x + top.w);
+      var nw = r - l;
+
+      if (nw <= 0.5) { gameOver(); return; }
+
+      var perfect = Math.abs(mov.x - top.x) < 2.5;
+      if (perfect) {
+        nw = Math.min(top.w + (combo >= 2 ? 12 : 8), 240);
+        mov.x = top.x + (top.w - nw) / 2;
+        combo++; flash = 1;
+      } else {
+        combo = 0;
+      }
+
+      // leftover pieces fall away
+      if (mov.x < l) falling.push({ x: mov.x, w: l - mov.x, y: blocks.length, vy: 0, side: -1 });
+      if (mov.x + mov.w > r) falling.push({ x: r, w: mov.x + mov.w - r, y: blocks.length, vy: 0, side: 1 });
+
+      blocks.push({ x: mov.x, w: nw });
+      score++;
+      if (MA.setBest('stack', score)) { }
+      setHud();
+      if (blocks.length > 6) scroll = blocks.length - 6;
+      newBlock();
+    }
+
+    function gameOver() {
+      over = true;
+      MA.setBest('stack', score);
+      setHud();
+      hint.textContent = 'Game over — you stacked ' + score + ' blocks.';
+      row.innerHTML = '';
+      row.appendChild(MA.button('Play again', function () { reset(); }, true));
+      MA.onRoundEnd();
+    }
+
+    function screenY(idx) { return H - 70 - (idx - scroll) * BH; }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      // backdrop grid
+      ctx.strokeStyle = 'rgba(110,231,255,.06)';
+      ctx.lineWidth = 1;
+      for (var g = 0; g < H; g += 34) { ctx.beginPath(); ctx.moveTo(0, g); ctx.lineTo(W, g); ctx.stroke(); }
+
+      for (var i = 0; i < blocks.length; i++) {
+        var b = blocks[i];
+        var y = screenY(i);
+        if (y > H + BH || y < -BH) continue;
+        var c = 'hsl(' + hue(i) + ',72%,' + (52 + (i % 3) * 4) + '%)';
+        ctx.fillStyle = c;
+        ctx.fillRect(b.x, y, b.w, BH);
+        ctx.fillStyle = 'rgba(255,255,255,.16)';
+        ctx.fillRect(b.x, y, b.w, 5);
+        ctx.strokeStyle = 'rgba(0,0,0,.28)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(b.x + .5, y + .5, b.w - 1, BH - 1);
+      }
+
+      for (var f = 0; f < falling.length; f++) {
+        var p = falling[f];
+        var py = screenY(p.y) + p.vy;
+        ctx.globalAlpha = Math.max(0, 1 - p.vy / 400);
+        ctx.fillStyle = 'hsl(' + hue(p.y) + ',72%,52%)';
+        ctx.fillRect(p.x, py, p.w, BH);
+        ctx.globalAlpha = 1;
+      }
+
+      if (!over && mov) {
+        var my = screenY(mov.y);
+        ctx.fillStyle = 'hsl(' + hue(mov.y) + ',80%,62%)';
+        ctx.fillRect(mov.x, my, mov.w, BH);
+        ctx.fillStyle = 'rgba(255,255,255,.22)';
+        ctx.fillRect(mov.x, my, mov.w, 5);
+      }
+
+      if (flash > 0) {
+        ctx.globalAlpha = flash;
+        ctx.fillStyle = '#34d399';
+        ctx.font = '700 26px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText(perfectText(), W / 2, 120);
+        ctx.globalAlpha = 1;
+      }
+    }
+    function perfectText() { return combo >= 2 ? combo + 'x PERFECT' : 'PERFECT'; }
+
+    var last = 0;
+    function loop(t) {
+      var dt = Math.min((t - last) / 16.67, 3); last = t;
+      if (!over && mov) {
+        mov.x += mov.dir * mov.speed * dt;
+        if (mov.x + mov.w > W) { mov.x = W - mov.w; mov.dir = -1; }
+        if (mov.x < 0) { mov.x = 0; mov.dir = 1; }
+      }
+      for (var i = falling.length - 1; i >= 0; i--) {
+        falling[i].vy += 6 * dt;
+        if (falling[i].vy > 420) falling.splice(i, 1);
+      }
+      if (flash > 0) flash -= 0.03 * dt;
+      draw();
+      raf = requestAnimationFrame(loop);
+    }
+    var raf = requestAnimationFrame(loop);
+
+    function onTap(e) { if (e) e.preventDefault(); drop(); }
+    cv.addEventListener('pointerdown', onTap);
+    var onKey = function (e) { if (e.code === 'Space' || e.key === ' ') { e.preventDefault(); drop(); } };
+    document.addEventListener('keydown', onKey);
+
+    MA._stackCleanup = function () { cancelAnimationFrame(raf); cv.removeEventListener('pointerdown', onTap); document.removeEventListener('keydown', onKey); };
+
+    reset();
+  };
+})(window.MiniArcade);
+
+</script>
+<script>window.MiniArcade.startStack(document.getElementById('stage'));</script>
+</body>
+</html>
