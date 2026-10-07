@@ -50,6 +50,16 @@
     var a = Math.max(d2, 0), b = Math.max(dz, 0);
     return Math.min(Math.max(d2, dz), 0) + Math.sqrt(a * a + b * b);
   }
+  function smin(a, b, k) {
+    var h = Math.min(Math.max(0.5 + 0.5 * (b - a) / k, 0), 1);
+    return b * (1 - h) + a * h - k * h * (1 - h);
+  }
+  /* approximate ellipsoid, r = [rx, ry, rz] */
+  function sdEll(x, y, z, r) {
+    var k0 = Math.sqrt((x / r[0]) * (x / r[0]) + (y / r[1]) * (y / r[1]) + (z / r[2]) * (z / r[2]));
+    var k1 = Math.sqrt((x / (r[0] * r[0])) * (x / (r[0] * r[0])) + (y / (r[1] * r[1])) * (y / (r[1] * r[1])) + (z / (r[2] * r[2])) * (z / (r[2] * r[2])));
+    return k0 * (k0 - 1) / Math.max(k1, 1e-6);
+  }
 
   function sd(x, y, z, type) {
     switch (type) {
@@ -64,13 +74,15 @@
         var s2 = sdStar2D(x * 2.55, y * 2.55, 0.95, 5, 2.6) / 2.55;
         return opExtrude(s2, Math.abs(z) - 0.135) - 0.05;
       }
-      case 3: {                                                          // cut gem (octahedron)
+      case 3: {                                                          // cut gem: octahedron puffed by a smooth ellipsoid belly
         var ax = Math.abs(x), ay = Math.abs(y), az = Math.abs(z);
-        return (ax + ay + az - 0.365) * 0.52;
+        var oct = (ax + ay + az - 0.375) * 0.52;
+        var bel = sdEll(x, y, z, [0.27, 0.27, 0.235]);
+        return smin(oct, bel, 0.09);
       }
-      case 4: {                                                          // heart prism
+      case 4: {                                                          // heart prism (domed in shading)
         var h2 = sdHeart2D(x / 0.55, (y + 0.03) / 0.55) * 0.55;
-        return opExtrude(h2, Math.abs(z) - 0.18) - 0.05;
+        return opExtrude(h2, Math.abs(z) - 0.15) - 0.06;
       }
       default: {                                                         // donut / torus
         var q = Math.sqrt(x * x + y * y) - 0.275;
@@ -159,6 +171,20 @@
 
           var n = normalAt(ox, oy, z, type);
           var nx = n[0], ny = n[1], nz = n[2];
+
+          /* pillow dome: extruded fronts are geometrically flat, so bend the
+             shading normal toward a hemispherical one — gives the puffed-gummy read */
+          if (type === 1 || type === 2 || type === 4) {
+            var domeR = type === 4 ? 0.34 : 0.42;
+            var bw = type === 4 ? 0.92 : 0.85;
+            var ux2 = ox / domeR, uy2 = oy / domeR;
+            var ul = Math.sqrt(ux2 * ux2 + uy2 * uy2 + 1);
+            nx = nx * (1 - bw) + (ux2 / ul) * bw;
+            ny = ny * (1 - bw) + (uy2 / ul) * bw;
+            nz = nz * (1 - bw) + (1 / ul) * bw;
+            var nl2 = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+            nx /= nl2; ny /= nl2; nz /= nl2;
+          }
 
           var diff = Math.max(0, nx * L1[0] + ny * L1[1] + nz * L1[2]);
           var back = Math.max(0, -(nx * L1[0] + ny * L1[1] + nz * L1[2]));
