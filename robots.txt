@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://foxxx009.github.io/mini-arcade/sitemap.xml
