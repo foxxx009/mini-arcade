@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Snake — Free Online Classic Snake Game</title>
+<meta name="description" content="Play the classic Snake game free online. Steer with the arrow keys or swipe, eat the pellets and grow without hitting the wall or your own tail.">
+<meta name="theme-color" content="#0b0d1a">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="manifest" href="../manifest.webmanifest">
+</head>
+<body>
+<div class="topbar"><div class="wrap">
+  <div class="brand">Mini<span>Arcade</span></div>
+  <nav><a href="../">Games</a><a href="../about/">About</a><a href="../privacy/">Privacy</a></nav>
+</div></div>
+
+<div class="wrap">
+  <div id="ad-top" class="adslot"></div>
+  <div class="gamehead">
+    <a class="btn" href="../">← All games</a>
+    <h2>Snake</h2>
+  </div>
+  <div class="stage" id="stage"></div>
+  <div id="ad-game" class="adslot"></div>
+
+  <h2 style="font-size:18px;margin-top:28px">How to play Snake</h2>
+  <p class="sub">Steer the snake with the <b>arrow keys</b> or <b>WASD</b>, or swipe on a touchscreen.
+  Every pellet you eat makes you one segment longer and slightly faster. The run ends if you hit a wall or your own body.</p>
+  <p class="sub"><b>Tip:</b> leave yourself an escape route. Early on, hug the border in a wide loop;
+  once you are long, plan turns before you reach the edge instead of reacting at the last moment.</p>
+</div>
+
+<footer><div class="wrap">
+  <div>Mini Arcade · free browser games · <a href="../privacy/">Privacy Policy</a></div>
+</div></footer>
+
+<script src="../assets/common.js"></script>
+<script src="../games/snake.js"></script>
+<script>window.MiniArcade.startSnake(document.getElementById('stage'));</script>
+</body>
+</html>
