@@ -1,0 +1,14 @@
+{
+  "name": "Mini Arcade",
+  "short_name": "Arcade",
+  "description": "Free online mini games: Stack Tower, 2048, Snake and Reflex Test.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0d1a",
+  "theme_color": "#0b0d1a",
+  "icons": [
+    { "src": "../icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
