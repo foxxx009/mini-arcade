@@ -370,12 +370,12 @@ footer a{color:var(--dim)}
         return opExtrude(s2, Math.abs(z) - 0.135) - 0.05;
       }
       case 3: {                                                          // cut gem (octahedron)
-        var ax = Math.abs(x), ay = Math.abs(y) * 0.86, az = Math.abs(z);
-        return (ax + ay + az - 0.62) * 0.52;
+        var ax = Math.abs(x), ay = Math.abs(y), az = Math.abs(z);
+        return (ax + ay + az - 0.365) * 0.52;
       }
       case 4: {                                                          // heart prism
-        var h2 = sdHeart2D(x / 0.36, (y + 0.02) / 0.36) * 0.36;
-        return opExtrude(h2, Math.abs(z) - 0.15) - 0.05;
+        var h2 = sdHeart2D(x / 0.55, (y + 0.03) / 0.55) * 0.55;
+        return opExtrude(h2, Math.abs(z) - 0.18) - 0.05;
       }
       default: {                                                         // donut / torus
         var q = Math.sqrt(x * x + y * y) - 0.275;
@@ -384,12 +384,19 @@ footer a{color:var(--dim)}
     }
   }
 
+  /* uniform shrink so every shape stays inside the sprite bounds and
+     leaves a visible gap between candies (unit half-cell is 0.5) */
+  var FIT = 0.86;
+  function sdS(x, y, z, type) {
+    return sd(x / FIT, y / FIT, z / FIT, type) * FIT;
+  }
+
   var NRM = [0, 0, 0];
   function normalAt(x, y, z, type) {
     var e = 0.0016;
-    var dx = sd(x + e, y, z, type) - sd(x - e, y, z, type);
-    var dy = sd(x, y + e, z, type) - sd(x, y - e, z, type);
-    var dz = sd(x, y, z + e, type) - sd(x, y, z - e, type);
+    var dx = sdS(x + e, y, z, type) - sdS(x - e, y, z, type);
+    var dy = sdS(x, y + e, z, type) - sdS(x, y - e, z, type);
+    var dz = sdS(x, y, z + e, type) - sdS(x, y, z - e, type);
     var l = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
     NRM[0] = dx / l; NRM[1] = dy / l; NRM[2] = dz / l;
     return NRM;
@@ -443,7 +450,7 @@ footer a{color:var(--dim)}
 
           var z = 0.75, hit = false, minD = 9, i;
           for (i = 0; i < 56; i++) {
-            var dd = sd(ox, oy, z, type);
+            var dd = sdS(ox, oy, z, type);
             if (dd < 0.0009) { hit = true; break; }
             if (dd < minD) minD = dd;
             z -= Math.max(dd * 0.8, 0.0035);
@@ -1008,6 +1015,21 @@ footer a{color:var(--dim)}
     }
 
     // ---------- sprites ----------
+    var spriteInfo = [];
+    function measureSprite(cv) {                 // fraction of the sprite width that is opaque
+      try {
+        var n = cv.width, g2 = cv.getContext('2d');
+        var d2 = g2.getImageData(0, 0, n, n).data;
+        var x0 = n, x1 = -1, y0 = n, y1 = -1;
+        for (var y = 0; y < n; y++) for (var x = 0; x < n; x++) {
+          if (d2[(y * n + x) * 4 + 3] > 8) {
+            if (x < x0) x0 = x; if (x > x1) x1 = x;
+            if (y < y0) y0 = y; if (y > y1) y1 = y;
+          }
+        }
+        return x1 < 0 ? null : { w: (x1 - x0 + 1) / n, h: (y1 - y0 + 1) / n };
+      } catch (e) { return null; }
+    }
     function buildSprites() {
       sprites = [];
       for (var i = 0; i < TYPES; i++) sprites.push(makeFlatSprite(i, CELL));
@@ -1019,7 +1041,7 @@ footer a{color:var(--dim)}
         var t = i2++;
         try {
           var s = makeRaySprite(t, CELL);
-          if (s) sprites[t] = s;
+          if (s) { sprites[t] = s; spriteInfo[t] = measureSprite(s); }
         } catch (e) { }
         setTimeout(next, 16);
       })();
@@ -1527,6 +1549,7 @@ footer a{color:var(--dim)}
         grid: grid, findMatches: findMatches, hasMove: hasMove,
         st: function () { return state; }, score: function () { return score; },
         moves: function () { return moves; }, cell: CELL, COLS: COLS, ROWS: ROWS,
+        spriteInfo: spriteInfo,
         swap: function (a, b) { tryMove(a, b); }
       };
     };
