@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>2048 — Free Online Number Puzzle Game</title>
+<meta name="description" content="Play 2048 free online. Use the arrow keys or swipe to slide the tiles; equal numbers merge into one. Reach the 2048 tile. No download.">
+<meta name="theme-color" content="#0b0d1a">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="manifest" href="../manifest.webmanifest">
+</head>
+<body>
+<div class="topbar"><div class="wrap">
+  <div class="brand">Mini<span>Arcade</span></div>
+  <nav><a href="../">Games</a><a href="../about/">About</a><a href="../privacy/">Privacy</a></nav>
+</div></div>
+
+<div class="wrap">
+  <div id="ad-top" class="adslot"></div>
+  <div class="gamehead">
+    <a class="btn" href="../">← All games</a>
+    <h2>2048</h2>
+  </div>
+  <div class="stage" id="stage"></div>
+  <div id="ad-game" class="adslot"></div>
+
+  <h2 style="font-size:18px;margin-top:28px">How to play 2048</h2>
+  <p class="sub">Use the <b>arrow keys</b> or <b>WASD</b> (or swipe on a touchscreen) to slide every tile in one direction.
+  Two tiles with the same number merge into their sum. A new 2 or 4 appears after each move.
+  The round ends when the board is full and no merge is possible.</p>
+  <p class="sub"><b>Tip:</b> keep your largest tile in one corner and never slide in the direction that would pull it out.
+  Build a descending chain along the edge instead of scattering big numbers across the board.</p>
+</div>
+
+<footer><div class="wrap">
+  <div>Mini Arcade · free browser games · <a href="../privacy/">Privacy Policy</a></div>
+</div></footer>
+
+<script src="../assets/common.js"></script>
+<script src="../games/g2048.js"></script>
+<script>window.MiniArcade.start2048(document.getElementById('stage'));</script>
+</body>
+</html>
