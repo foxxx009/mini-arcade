@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Candy Blast — Free Online Match 3 Puzzle Game</title>
+<meta name="description" content="Candy Blast is a free online match-3 game. Swap candies, match three or more, trigger striped candy, bomb and rainbow combos. No download, no sign-up.">
+<meta name="theme-color" content="#0b0d1a">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="manifest" href="../manifest.webmanifest">
+</head>
+<body>
+<div class="topbar"><div class="wrap">
+  <div class="brand">Mini<span>Arcade</span></div>
+  <nav><a href="../">Games</a><a href="../about/">About</a><a href="../privacy/">Privacy</a></nav>
+</div></div>
+
+<div class="wrap">
+  <div id="ad-top" class="adslot"></div>
+  <div class="gamehead">
+    <a class="btn" href="../">← All games</a>
+    <h2>Candy Blast</h2>
+  </div>
+  <div class="stage" id="stage"></div>
+  <div id="ad-game" class="adslot"></div>
+
+  <h2 style="font-size:18px;margin-top:28px">How to play Candy Blast</h2>
+  <p class="sub">Swap two neighbouring candies to line up <b>three or more of the same colour</b>.
+  They pop, new ones drop in, and if the drop makes another match it chains into a combo with a score multiplier.
+  Each level gives you <b>25 moves</b> to hit the target score, shown on the bar above the board.</p>
+
+  <h2 style="font-size:18px;margin-top:18px">Special candies</h2>
+  <p class="sub">
+    Match <b>4 in a row</b> → a <b>striped candy</b> that clears a whole row or column when it pops.<br>
+    Match an <b>L or T shape</b> → a <b>bomb candy</b> that blows up everything around it.<br>
+    Match <b>5 in a line</b> → a <b>rainbow candy</b>: swap it with any candy to clear every candy of that colour on the board.
+  </p>
+  <p class="sub"><b>Tip:</b> special candies trigger each other. Dropping a bomb next to a striped candy clears far more
+  than either one alone, and that is how the big combo scores happen.</p>
+</div>
+
+<footer><div class="wrap">
+  <div>Mini Arcade · free browser games · <a href="../privacy/">Privacy Policy</a></div>
+</div></footer>
+
+<script src="../assets/common.js"></script>
+<script src="../games/match3.js"></script>
+<script>window.MiniArcade.startMatch3(document.getElementById('stage'));</script>
+</body>
+</html>
