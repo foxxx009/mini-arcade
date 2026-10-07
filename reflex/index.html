@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Reflex Test — Measure Your Reaction Time Online</title>
+<meta name="description" content="Free online reaction time test. Wait for the screen to turn green, then click as fast as you can. Five rounds, average result in milliseconds.">
+<meta name="theme-color" content="#0b0d1a">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="manifest" href="../manifest.webmanifest">
+</head>
+<body>
+<div class="topbar"><div class="wrap">
+  <div class="brand">Mini<span>Arcade</span></div>
+  <nav><a href="../">Games</a><a href="../about/">About</a><a href="../privacy/">Privacy</a></nav>
+</div></div>
+
+<div class="wrap">
+  <div id="ad-top" class="adslot"></div>
+  <div class="gamehead">
+    <a class="btn" href="../">← All games</a>
+    <h2>Reflex Test</h2>
+  </div>
+  <div class="stage" id="stage"></div>
+  <div id="ad-game" class="adslot"></div>
+
+  <h2 style="font-size:18px;margin-top:28px">How the reaction test works</h2>
+  <p class="sub">Click the panel to begin. The screen stays blue for a random delay between 1.2 and 4 seconds,
+  then turns green. Click the instant it turns green. Clicking early counts as a false start and the round is retried.
+  After five rounds you get your average in milliseconds.</p>
+  <p class="sub"><b>Reference values:</b> under 200 ms is excellent, 200–270 ms is above average,
+  270–350 ms is the typical human range, and above 350 ms leaves room to improve.
+  Results depend on your device and display, so compare yourself to yourself.</p>
+</div>
+
+<footer><div class="wrap">
+  <div>Mini Arcade · free browser games · <a href="../privacy/">Privacy Policy</a></div>
+</div></footer>
+
+<script src="../assets/common.js"></script>
+<script src="../games/reflex.js"></script>
+<script>window.MiniArcade.startReflex(document.getElementById('stage'));</script>
+</body>
+</html>
