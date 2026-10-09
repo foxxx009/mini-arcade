@@ -93,7 +93,7 @@
 
   /* uniform shrink so every shape stays inside the sprite bounds and
      leaves a visible gap between candies (unit half-cell is 0.5) */
-  var FIT = 0.86;
+  var FIT = 0.90;
   function sdS(x, y, z, type) {
     return sd(x / FIT, y / FIT, z / FIT, type) * FIT;
   }
@@ -915,7 +915,10 @@
       var sp = sprites[t.t] || sprites[0];
       if (!sp) return;
       var w = rowW(r) * t.sx;
-      var bx = t.px, by = t.py - t.hop;
+      // the heart's visual centroid sits high in its sprite; nudge the sprite
+      // down so the heart reads centred inside its cell (measured ~0.27*cell off)
+      var yoff = (t.t === 4) ? rowW(r) * 0.27 : 0;
+      var bx = t.px, by = t.py - t.hop + yoff;
 
       if (t.die > 0) {
         var p = t.die;
