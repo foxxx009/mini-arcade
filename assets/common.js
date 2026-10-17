@@ -67,17 +67,40 @@
     } catch (e) { /* storage blocked: skip */ }
   };
 
-  /* ---------- best score ---------- */
+  /* ---------- best score (Playgama Bridge-aware) ----------
+     When the Playgama Bridge SDK is present we must persist progress through
+     bridge.storage (never localStorage directly). On the public site we fall
+     back to localStorage. BRIDGE is captured at load time, so for the Playgama
+     build — where playgama-bridge.js is loaded before this file — it is truthy. */
+  var BRIDGE = window.bridge || null;
+  MA._bestCache = {};
   MA.best = function (key) {
+    if (BRIDGE && BRIDGE.storage) return (MA._bestCache[key] | 0) || 0;
     try { return parseInt(localStorage.getItem('ma_best_' + key) || '0', 10) || 0; } catch (e) { return 0; }
   };
   MA.setBest = function (key, val) {
-    try {
-      var cur = MA.best(key);
+    if (BRIDGE && BRIDGE.storage) {
+      var cur = (MA._bestCache[key] | 0) || 0;
       var better = MA.higherIsBetter(key) ? val > cur : (cur === 0 || val < cur);
-      if (better) { localStorage.setItem('ma_best_' + key, String(val)); return true; }
+      if (better) { MA._bestCache[key] = val; try { BRIDGE.storage.setItem('ma_best_' + key, String(val)); } catch (e) {} return true; }
+      return false;
+    }
+    try {
+      var c2 = MA.best(key);
+      var b2 = MA.higherIsBetter(key) ? val > c2 : (c2 === 0 || val < c2);
+      if (b2) { localStorage.setItem('ma_best_' + key, String(val)); return true; }
     } catch (e) { }
     return false;
+  };
+  MA.loadBestFromBridge = function (key) {
+    if (!(BRIDGE && BRIDGE.storage)) return;
+    try {
+      BRIDGE.storage.getItem('ma_best_' + key, function (v) {
+        var n = parseInt(v, 10) || 0;
+        MA._bestCache[key] = n;
+        if (MA._refreshHud) try { MA._refreshHud(); } catch (e) { }
+      });
+    } catch (e) { }
   };
   var LOWER_IS_BETTER = { reflex: true }; // reaction time in ms
   MA.higherIsBetter = function (key) { return !LOWER_IS_BETTER[key]; };
