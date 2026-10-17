@@ -242,6 +242,25 @@
     } catch (e) { return null; }
   }
 
+  /* ---------- Playgama Bridge: ad helpers (safe no-op when bridge absent) ----------
+     Every call is guarded so the public site (no Bridge SDK) is completely unaffected. */
+  MA.bridgeShowInterstitial = function (placement) {
+    var b = window.bridge;
+    if (!b || !b.advertisement || !b.advertisement.isInterstitialSupported) return false;
+    try { b.advertisement.showInterstitial(placement || 'game_over'); return true; } catch (e) { return false; }
+  };
+  MA.bridgeShowRewarded = function (placement, onReward) {
+    var b = window.bridge;
+    if (!b || !b.advertisement || !b.advertisement.isRewardedSupported) return false;
+    try {
+      b.advertisement.on(b.EVENT_NAME.REWARDED_STATE_CHANGED, function (st) {
+        if (st === 'rewarded') { try { if (onReward) onReward(); } catch (e) { } }
+      });
+      b.advertisement.showRewarded(placement || 'continue');
+      return true;
+    } catch (e) { return false; }
+  };
+
   MA.startMatch3 = function (host) {
     host.innerHTML = '';
 
@@ -289,7 +308,7 @@
     var score = 0, level = 1, moves = 25, target = 1500;
     var combo = 0, state = 'idle', shake = 0, banner = null, flashAll = 0;
     var sel = null, swapPair = null, spawns = [], forceClear = null;
-    var lastTouched = null, drag = null, dead = false, sound = true;
+    var lastTouched = null, drag = null, dead = false, sound = true, paused = false;
     var raf = 0, actx = null;
 
     var still = false;
@@ -580,10 +599,25 @@
       setHud();
       hint.textContent = 'Out of moves — final score ' + score + ' at level ' + level + '.';
       row.innerHTML = '';
+      // Rewarded "continue": +5 moves (only shown when the platform supports rewarded ads).
+      var b = window.bridge;
+      if (b && b.advertisement && b.advertisement.isRewardedSupported) {
+        row.appendChild(MA.button('🎁 Watch ad · +5 moves', function () {
+          MA.bridgeShowRewarded('continue', function () {
+            moves += 5; dead = false; paused = false;
+            hint.textContent = 'Ad bonus — +5 moves! Keep going.';
+            row.innerHTML = '';
+            row.appendChild(MA.button('Restart', function () { reset(); }));
+            row.appendChild(soundBtn());
+            setHud();
+          });
+        }));
+      }
       row.appendChild(MA.button('Play again', function () { reset(); }, true));
       row.appendChild(soundBtn());
       beep(180, 0.35, 'sawtooth');
       MA.onRoundEnd();
+      MA.bridgeShowInterstitial('game_over'); // required for revenue share; no-op off-platform
     }
 
     function soundBtn() {
@@ -1143,6 +1177,7 @@
     function loop(now) {
       var dt = last ? clamp((now - last) / 16.67, 0.5, 3) : 1;
       last = now;
+      if (paused) { draw(now); raf = requestAnimationFrame(loop); return; }
 
       for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) {
         var t = grid[r][c];
@@ -1281,6 +1316,25 @@
     computeRows();
     layout();
     reset();
+
+    // Playgama Bridge init — safe no-op when the SDK is absent (public site / mock mode).
+    (function () {
+      var b = window.bridge;
+      if (!b) return;
+      try {
+        b.initialize().then(function () {
+          try { if (b.platform && b.platform.isAudioEnabled === false) sound = false; } catch (e) { }
+          if (b.platform && b.EVENT_NAME) {
+            b.platform.on(b.EVENT_NAME.AUDIO_STATE_CHANGED, function (on) { if (!on) sound = false; });
+            b.platform.on(b.EVENT_NAME.PAUSE_STATE_CHANGED, function (p) { paused = !!p; });
+          }
+          try { if (b.platform) b.platform.sendMessage('game_ready'); } catch (e) { }
+          MA._refreshHud = setHud;
+          MA.loadBestFromBridge('match3');
+        }).catch(function () { });
+      } catch (e) { }
+    })();
+
     raf = requestAnimationFrame(loop);
   };
 })(window.MiniArcade);
